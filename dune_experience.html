@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DUNE | The Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Cinzel', 'serif'],
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        spice: {
+                            400: '#f59e0b',
+                            500: '#d97706',
+                            600: '#b45309',
+                            800: '#78350f',
+                            900: '#451a03',
+                        },
+                        arrakis: '#0a0908',
+                    },
+                    backgroundImage: {
+                        'radial-spice': 'radial-gradient(circle at center, rgba(180, 83, 9, 0.15) 0%, rgba(10, 9, 8, 1) 70%)',
+                        'radial-explosion': 'radial-gradient(circle at top right, rgba(245, 158, 11, 0.4) 0%, rgba(10, 9, 8, 1) 60%)',
+                        'gold-cracked': 'linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0a0908;
+            color: #e5e5e5;
+            overflow-x: hidden;
+            overscroll-behavior: none;
+        }
+
+        /* Cinematic Text Fades */
+        .reveal-text {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            filter: blur(10px);
+        }
+
+        .reveal-text.active {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+
+        /* Delay Utilities for sequence revealing */
+        .delay-100 { transition-delay: 100ms; }
+        .delay-300 { transition-delay: 300ms; }
+        .delay-500 { transition-delay: 500ms; }
+        .delay-700 { transition-delay: 700ms; }
+        .delay-1000 { transition-delay: 1000ms; }
+        .delay-1500 { transition-delay: 1500ms; }
+
+        /* The Gold Cracked Text Effect */
+        .text-gold {
+            background-image: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+            animation: shine 4s linear infinite;
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        /* Camera Shake Effect for the Sandworm Scene */
+        .camera-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both infinite;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Scene Transition Overlays */
+        .scene-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+        }
+
+        /* Subtitle Styling for SFX */
+        .sfx-subtitle {
+            font-family: 'Inter', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #9ca3af;
+            font-size: 0.75rem;
+        }
+        
+        #sand-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        /* Hide scrollbar for immersive experience */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-spice-600 selection:text-white">
+
+    <!-- Fixed Particle Canvas for Sand Effect -->
+    <canvas id="sand-canvas"></canvas>
+
+    <!-- Fixed ambient background glow -->
+    <div id="ambient-bg" class="fixed inset-0 bg-radial-spice z-[-1] transition-all duration-1000"></div>
+
+    <!-- Navigation / Progress -->
+    <nav class="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-50 mix-blend-difference">
+        <div class="font-serif text-2xl font-bold tracking-widest text-white">DUNE</div>
+        <div class="hidden md:flex space-x-2">
+            <div class="w-2 h-2 rounded-full bg-spice-500 animate-pulse"></div>
+            <span class="text-xs uppercase tracking-widest text-gray-400 font-sans">Cinematic Experience</span>
+        </div>
+    </nav>
+
+    <!-- Scroll Indicator -->
+    <div class="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center opacity-50 animate-bounce">
+        <span class="text-xs uppercase tracking-widest mb-2 font-sans">Scroll to Descend</span>
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+    </div>
+
+    <!-- Main Scrollytelling Container -->
+    <main class="relative z-10">
+
+        <!-- Scene 1: The Hook -->
+        <section class="min-h-screen flex items-center justify-center relative p-6">
+            <div class="max-w-4xl w-full text-center relative">
+                <p class="sfx-subtitle reveal-text mb-8">[SFX: Massive aircraft thrusters echoing over desolate dunes]</p>
+                <h1 class="text-4xl md:text-6xl lg:text-7xl font-serif font-medium tracking-wide leading-tight reveal-text delay-300">
+                    Aiet... <br>
+                    <span class="text-gray-400">Aiet...</span> <br>
+                    <span class="text-spice-500 font-bold">Aiet... Arrakis...!</span>
+                </h1>
+                
+                <div class="mt-16 reveal-text delay-700">
+                    <p class="font-sans text-lg md:text-xl text-gray-400 font-light max-w-2xl mx-auto">
+                        A lone figure stands before the towering capital. The ground is an ocean of sand. Giant shadows of descending aircraft sweep across the dunes.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scene 2: The Setup -->
+        <section class="min-h-screen flex items-center justify-center relative p-6" data-bg="bg-radial-spice">
+            <div class="max-w-5xl w-full relative z-10 flex flex-col items-center">
+                <!-- Abstract Planet Representation -->
+                <div class="w-64 h-64 rounded-full border border-spice-800/30 flex items-center justify-center relative mb-12 reveal-text">
+                    <div class="absolute inset-0 bg-spice-900/20 rounded-full blur-xl"></div>
+                    <div class="font-serif text-3xl tracking-[0.3em] text-spice-400 uppercase opacity-50 z-10">Arrakis</div>
+                </div>
+
+                <p class="sfx-subtitle reveal-text delay-300 mb-6">[Deafening roar of dragonfly ornithopter wings beating the air]</p>
+                
+                <blockquote class="text-3xl md:text-5xl font-serif font-light text-center leading-snug reveal-text delay-500 border-l-2 border-spice-600 pl-6 md:pl-10 text-white">
+                    "By Imperial Decree: House Atreides is hereby granted stewardship of the planet Arrakis."
+                </blockquote>
+            </div>
+        </section>
+
+        <!-- Scene 3: The Conflict -->
+        <section class="min-h-screen flex items-center justify-start relative p-6 md:p-20" data-bg="bg-black">
+            <div class="max-w-3xl w-full">
+                <p class="sfx-subtitle reveal-text mb-4">[Music: Paced, industrial-tribal drums begin to pound]</p>
+                
+                <p class="font-sans text-gray-500 text-sm tracking-widest uppercase mb-8 reveal-text delay-300">
+                    Deep in the desert. A massive spice harvester dwarfs the soldiers below.
+                </p>
+
+                <h2 class="text-4xl md:text-6xl font-serif text-white leading-tight reveal-text delay-500">
+                    "They bring their machines."
+                </h2>
+                <h2 class="text-4xl md:text-6xl font-serif text-gray-400 leading-tight mt-4 reveal-text delay-700">
+                    "They do not know the desert."
+                </h2>
+                <h2 class="text-5xl md:text-7xl font-serif text-spice-500 italic mt-6 reveal-text delay-1000 font-bold">
+                    "Our desert."
+                </h2>
+                <p class="text-sm font-sans text-gray-500 mt-6 reveal-text delay-1500">— Fremen Warrior, whispering fiercely</p>
+            </div>
+        </section>
+
+        <!-- Scene 4: Rising Action & Power -->
+        <section class="min-h-[120vh] flex flex-col justify-center relative p-6 md:p-20" data-bg="bg-radial-explosion">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-7xl mx-auto">
+                <!-- Visual Cues Column -->
+                <div class="space-y-12 flex flex-col justify-center">
+                    <div class="reveal-text border-b border-gray-800 pb-4">
+                        <p class="font-sans text-gray-400 italic">Paul Atreides steps forward, his boot sinking into the deep sand...</p>
+                    </div>
+                    <div class="reveal-text delay-300 border-b border-gray-800 pb-4">
+                        <p class="font-sans text-gray-400 italic">A crysknife is unsheathed silently in the shadows...</p>
+                    </div>
+                    <div class="reveal-text delay-500 border-b border-gray-800 pb-4">
+                        <p class="font-sans text-spice-400 font-medium">An Atreides ornithopter violently explodes into the night sky.</p>
+                    </div>
+                </div>
+
+                <!-- Main Copy Column -->
+                <div class="flex flex-col justify-center">
+                    <h3 class="text-4xl md:text-5xl font-serif leading-tight reveal-text delay-500 mb-8">
+                        Here, water is <span class="text-blue-400/80">life</span>.<br>
+                        And spice... is <span class="text-spice-500">power</span>.
+                    </h3>
+                    
+                    <p class="text-xl md:text-2xl font-sans font-light text-gray-300 reveal-text delay-700 leading-relaxed">
+                        Everyone wants a piece of the world that kills everyone who touches it.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scene 5: The Climax (Sandworm) -->
+        <!-- Added a special ID here to trigger the camera shake effect in JS -->
+        <section id="scene-climax" class="min-h-screen flex items-center justify-center relative p-6 overflow-hidden">
+            <!-- Massive shadowy shape simulating the worm -->
+            <div class="absolute bottom-[-20%] left-1/2 transform -translate-x-1/2 w-[150vw] h-[100vh] bg-gradient-to-t from-black via-spice-900/40 to-transparent rounded-[100%] blur-3xl opacity-0 transition-opacity duration-1000 z-0" id="worm-shadow"></div>
+
+            <div class="max-w-4xl w-full text-center relative z-10" id="climax-content">
+                <p class="font-sans text-gray-400 text-lg mb-12 reveal-text">
+                    Miles from the city. The surface erupts. A colossal Sandworm rises, its ringed mouth creating a vortex of sand. Paul stands perfectly still, staring up at the impossible scale.
+                </p>
+                
+                <h2 class="text-5xl md:text-7xl font-serif text-white tracking-wide reveal-text delay-500">
+                    The mystery of Dune... <br>
+                    <span class="text-spice-500 italic mt-4 inline-block">awaits.</span>
+                </h2>
+            </div>
+        </section>
+
+        <!-- Scene 6: Fade to Black & Title -->
+        <section class="min-h-screen flex flex-col items-center justify-center relative p-6 bg-black z-20">
+            <div class="text-center">
+                <!-- Massive Title -->
+                <h1 class="text-7xl md:text-[10rem] font-serif font-black tracking-[0.2em] mb-4 reveal-text text-gold pb-4">
+                    DUNE
+                </h1>
+                
+                <p class="text-xl md:text-2xl font-serif tracking-widest text-gray-400 uppercase mb-16 reveal-text delay-500">
+                    Frank Herbert’s Legendary Masterpiece
+                </p>
+
+                <p class="text-2xl md:text-4xl font-sans font-light italic text-white reveal-text delay-1000">
+                    "The sleeper.... <span class="text-spice-500">must awaken.</span>"
+                </p>
+
+                <!-- Call to action button styling -->
+                <div class="mt-20 reveal-text delay-1500">
+                    <button class="px-8 py-4 bg-transparent border border-spice-600 text-spice-400 hover:bg-spice-900/30 hover:text-white transition-all duration-300 font-sans tracking-widest uppercase text-sm rounded-sm backdrop-blur-sm shadow-[0_0_15px_rgba(217,119,6,0.2)] hover:shadow-[0_0_25px_rgba(217,119,6,0.5)]">
+                        Pre-Order Now
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- Particle System (Spice/Sand blowing in the wind) ---
+        const canvas = document.getElementById('sand-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        
+        // Settings for the sand storm
+        const particleCount = 200;
+        let windSpeed = 1.5; // Base horizontal wind
+        
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        
+        class Particle {
+            constructor() {
+                this.reset();
+                // Randomize initial positions across the screen
+                this.x = Math.random() * width; 
+            }
+            
+            reset() {
+                this.x = Math.random() * width * 1.5; // Start slightly offscreen to the right
+                this.y = Math.random() * height;
+                this.size = Math.random() * 2.5 + 0.5;
+                this.speedX = (Math.random() * -2) - windSpeed; // Move left
+                this.speedY = (Math.random() * 1) - 0.5;
+                // Spice colors (oranges, yellows, browns)
+                const colors = ['rgba(245, 158, 11, 0.6)', 'rgba(217, 119, 6, 0.4)', 'rgba(180, 83, 9, 0.5)', 'rgba(255, 255, 255, 0.2)'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                // Reset if it goes off screen to the left
+                if (this.x < -10 || this.y > height + 10 || this.y < -10) {
+                    this.reset();
+                    this.x = width + 10; // Respawn on the right
+                }
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+        
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+        
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        initParticles();
+        animateParticles();
+
+        // --- Intersection Observer for Cinematic Text Reveals & Scene Effects ---
+        
+        const revealElements = document.querySelectorAll('.reveal-text');
+        const sections = document.querySelectorAll('section');
+        const ambientBg = document.getElementById('ambient-bg');
+        const body = document.body;
+        
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.3 // Trigger when 30% of the element is visible
+        };
+        
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    // Optional: Stop observing once revealed if you want it to stay
+                    // observer.unobserve(entry.target); 
+                } else {
+                    // Remove if you want them to fade out when scrolling past
+                    entry.target.classList.remove('active');
+                }
+            });
+        }, observerOptions);
+        
+        revealElements.forEach(el => {
+            revealObserver.observe(el);
+        });
+
+        // --- Observer for Section Backgrounds & Special Effects ---
+        const sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Handle dynamic backgrounds
+                    const bgClass = entry.target.getAttribute('data-bg');
+                    if (bgClass) {
+                        ambientBg.className = `fixed inset-0 z-[-1] transition-all duration-1000 ${bgClass}`;
+                    } else {
+                        ambientBg.className = `fixed inset-0 z-[-1] transition-all duration-1000 bg-black`;
+                    }
+
+                    // Special Effect for Climax (Sandworm Camera Shake & Wind increase)
+                    if (entry.target.id === 'scene-climax') {
+                        document.getElementById('climax-content').classList.add('camera-shake');
+                        document.getElementById('worm-shadow').style.opacity = '1';
+                        windSpeed = 5; // Wind speeds up during climax
+                        // Trigger haptic feedback on mobile if supported
+                        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100]);
+                    } else {
+                        document.getElementById('climax-content')?.classList.remove('camera-shake');
+                        document.getElementById('worm-shadow').style.opacity = '0';
+                        windSpeed = 1.5; // Reset wind
+                    }
+                }
+            });
+        }, { threshold: 0.5 }); // Trigger when 50% of section is visible
+
+        sections.forEach(section => {
+            sectionObserver.observe(section);
+        });
+
+    </script>
+</body>
+</html>
